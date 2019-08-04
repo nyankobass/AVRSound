@@ -6,7 +6,7 @@ ATmega328(Arduino Uno) と任意の Arduino の2台にて、8bit シンセを実
 ![](doc/BlockDiagram.png)
 
 # AVRSound
-ATmeag328 をターゲットにモノフォニックシンセ音源を構成する。
+ATmeag328 をターゲットにモノフォニックな波形メモリ音源を構成する。
 
 レジスタはGB音源互換。
 
