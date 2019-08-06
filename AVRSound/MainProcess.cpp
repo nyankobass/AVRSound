@@ -8,6 +8,7 @@
 #include "Register.h"
 #include "SquareWaveProcessor.h"
 #include "WaveMemoryProcessor.h"
+#include "NoiseProcessor.h"
 
 ISR(TIMER1_COMPA_vect) //timer1でのコンペアマッチAの割り込み関数
 {
@@ -26,8 +27,13 @@ namespace {
     AVRSound::SquareWaveProcessor square_wave1_processor(dac, sound_register, 0);
     AVRSound::SquareWaveProcessor square_wave2_processor(dac, sound_register, 1);
     AVRSound::WaveMemoryProcessor wave_memory_processor(dac, sound_register);
+    AVRSound::NoiseProcessor      noise_processor(dac, sound_register);
 
-    uint8_t mode = 0;
+    uint8_t mode = 2;
+
+    inline UpdateMode(){
+        
+    }
 }
 
 namespace AVRSound{
@@ -48,6 +54,9 @@ void setup()
         break;
     case 2:
         wave_memory_processor.Initialize();
+        break;
+    case 3:
+        noise_processor.Initialize();
         break;
     default:
         square_wave1_processor.Initialize();
@@ -92,6 +101,9 @@ void onTimerEvent()
         break;
     case 2:
         wave_memory_processor.Update();
+        break;
+    case 3:
+        noise_processor.Update();
         break;
     default:
         square_wave1_processor.Update();

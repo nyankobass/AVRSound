@@ -71,10 +71,10 @@ public:
     }
 };
 
-class WAVE_MEMROY
+class WAVE_MEMORY
 {
 public:
-    WAVE_MEMROY(){
+    WAVE_MEMORY(){
         for (int i = 0; i < BYTE_SIZE; i++) {
             BYTE[i] = 0;
         }

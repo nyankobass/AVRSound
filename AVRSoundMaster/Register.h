@@ -4,17 +4,24 @@
 #include <inttypes.h>
 #include "SquareSetting.h"
 #include "WaveMemorySetting.h"
+#include "NoiseSetting.h"
 
 namespace AVRSound{
 
 /* 制御用レジスタを宣言する */
 struct REGISTER{
+    /* 矩形波1 */
     SQUARE_SETTING SOUND1;
+    
+    /* 矩形波2 */
     SQUARE_SETTING SOUND2;
 
+    /* 波形メモリ */
     WAVE_MEMORY_SETTING SOUND3;
 
-    WAVE_MEMROY WAVE;
+    /* ノイズ */
+    NOISE_SETTING SOUND4;
+
 
     union TOTAL_SETTING{
         uint8_t BYTE[1];
@@ -30,6 +37,8 @@ struct REGISTER{
         } BIT;
     } TOTAL;
     
+    WAVE_MEMORY WAVE;
+
     /* アドレス指定で書き込む */
     void write_byte(uint8_t addr, uint8_t byte_data[], uint8_t byte_num) volatile {
         volatile uint8_t* byte_addr = nullptr;
@@ -39,10 +48,20 @@ struct REGISTER{
             return;
         }
 
-        if (addr >= TOTAL_ADDR){
+        if (addr >= WAVE_ADDR){
+            byte_addr = WAVE.BYTE;
+            byte_size = WAVE_MEMORY::BYTE_SIZE;
+            index = addr - WAVE_ADDR;
+        }
+        else if (addr >= TOTAL_ADDR){
             byte_addr = TOTAL.BYTE;
             byte_size = 1;
             index = addr - TOTAL_ADDR;
+        }
+        else if (addr >= SOUND4_ADDR){
+            byte_addr = SOUND4.BYTE;
+            byte_size = NOISE_SETTING::BYTE_SIZE;
+            index = addr - SOUND4_ADDR;
         }
         else if (addr >= SOUND3_ADDR){
             byte_addr = SOUND3.BYTE;
@@ -74,8 +93,10 @@ struct REGISTER{
     static const uint8_t SOUND1_ADDR = 0;
     static const uint8_t SOUND2_ADDR = SOUND1_ADDR + SQUARE_SETTING::BYTE_SIZE;
     static const uint8_t SOUND3_ADDR = SOUND2_ADDR + SQUARE_SETTING::BYTE_SIZE;
-    static const uint8_t TOTAL_ADDR = SOUND3_ADDR + WAVE_MEMORY_SETTING::BYTE_SIZE;
-    static const uint8_t MAX_ADDR = TOTAL_ADDR + 1;
+    static const uint8_t SOUND4_ADDR = SOUND3_ADDR + WAVE_MEMORY_SETTING::BYTE_SIZE;
+    static const uint8_t TOTAL_ADDR  = SOUND4_ADDR + NOISE_SETTING::BYTE_SIZE;
+    static const uint8_t WAVE_ADDR   = TOTAL_ADDR + 1;
+    static const uint8_t MAX_ADDR    = WAVE_ADDR + WAVE_MEMORY::BYTE_SIZE;
 };
 
 }
