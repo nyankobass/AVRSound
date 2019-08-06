@@ -41,6 +41,16 @@ void SquareWaveProcessor::Initialize()
 
     /* レジスタ値に応じた割り込み時間を設定 */
     FrequencyUpdate();
+
+
+    /* Timer2 割り込み設定 */
+    /* CTC 1024分周 */
+    TCCR2A = 0b00000010;
+    TCCR2B = 0b00000111;
+    TIMSK2 = 0b00000010;
+
+    /* 1/64[s] 毎に割り込みが発生するように設定 */
+    OCR2A = 0xF4; /* 244 */
 }
 
 void SquareWaveProcessor::Update()
@@ -50,24 +60,19 @@ void SquareWaveProcessor::Update()
 
     dac.Output(output_volume_buffer);
 
-    /* 出力が有効でなければ終了 */
-    if (sound_register.TOTAL.BIT.is_output_enable == 0) {
-        output_volume_buffer = 0x80;
-        sound_register.TOTAL.BIT.is_key_on_square1 = 0;
-        return;
-    }
 
-    /* 再生フラグが立っていなければ終了 */
-    if (square_register->is_start() == false) {
+    /* 停止指示が出ていれば終了 */
+    if (square_register->BYTE[1] == 0x00) {
         output_volume_buffer = 0x80;
         sound_register.TOTAL.BIT.is_key_on_square1 = 0;
         return;
     }
 
     /* 再生開始処理 */
-    if (sound_register.TOTAL.BIT.is_key_on_square1 == 0) {
+    if (sound_register.SOUND1.is_start()) {
         wave_table_index = 0;
         volume_index = square_register->init_volume();
+        sound_register.SOUND1.set_is_start(false);
         sound_register.TOTAL.BIT.is_key_on_square1 = 1;
     }
 
@@ -88,7 +93,30 @@ void SquareWaveProcessor::Update()
 
 void SquareWaveProcessor::EnvelopeUpdate()
 {
+    static uint8_t tick = 0;
 
+    if (square_register->envelope_step_time() == 0){
+        return;
+    }
+
+    tick += 1;
+
+    if (square_register->envelope_step_time() > tick) {
+        return;
+    }
+
+    tick = 0;
+
+    if (square_register->is_envelope_increment()) {
+        if (volume_index < 0x0F) {
+            volume_index = volume_index + 1;
+        }
+    }
+    else {
+        if (volume_index != 0) {
+            volume_index = volume_index - 1;
+        }
+    }
 }
 
 inline void SquareWaveProcessor::FrequencyUpdate()

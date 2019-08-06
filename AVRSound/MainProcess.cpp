@@ -15,6 +15,12 @@ ISR(TIMER1_COMPA_vect) //timer1でのコンペアマッチAの割り込み関数
     AVRSound::onTimerEvent();
 }
 
+ISR(TIMER2_COMPA_vect) //timer1でのコンペアマッチAの割り込み関数
+{
+    AVRSound::onTimer2Event();
+}
+
+
 /* ローカル(?)変数定義 */
 namespace {
     /* レジスタ */
@@ -95,6 +101,13 @@ void onTimerEvent()
 
     PORTD &= 0b11111011;
 }
+
+void onTimer2Event()
+{
+    processor->EnvelopeUpdate();
+
+}
+
 
 /* I2C 受信時 */
 void onI2CReceived(int byte_num)

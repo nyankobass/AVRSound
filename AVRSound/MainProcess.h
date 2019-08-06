@@ -8,6 +8,8 @@ namespace AVRSound{
 
     void onTimerEvent();
 
+    void onTimer2Event();
+
     void onI2CReceived(int num_bytes);
 }
 
