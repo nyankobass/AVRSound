@@ -49,8 +49,8 @@ void SquareWaveProcessor::Initialize()
     TCCR2B = 0b00000111;
     TIMSK2 = 0b00000010;
 
-    /* 1/64[s] 毎に割り込みが発生するように設定 */
-    OCR2A = 0xF4; /* 244 */
+    /* 1/256[s] 毎に割り込みが発生するように設定 */
+    OCR2A = 61;
 }
 
 void SquareWaveProcessor::Update()
@@ -63,6 +63,13 @@ void SquareWaveProcessor::Update()
 
     /* 停止指示が出ていれば終了 */
     if (square_register->BYTE[1] == 0x00) {
+        output_volume_buffer = 0x80;
+        sound_register.TOTAL.BIT.is_key_on_square1 = 0;
+        return;
+    }
+
+    /* 長さ有効かつ長さ0なら終了 */
+    if (square_register->is_enable_length() && (square_register->length() == 0)){
         output_volume_buffer = 0x80;
         sound_register.TOTAL.BIT.is_key_on_square1 = 0;
         return;
@@ -93,6 +100,37 @@ void SquareWaveProcessor::Update()
 
 void SquareWaveProcessor::EnvelopeUpdate()
 {
+    /* 1/256[s] 毎に呼び出される */
+    {
+        static uint8_t envelope_tick = 0;
+        envelope_tick++;
+
+        /* 1/256 * 4 = 1/64[s] 毎に呼び出し */
+        if(envelope_tick >= 4){
+            InnerEnvelopeUpdate();
+            envelope_tick = 0;
+        }
+    }
+
+    {
+        /* 長さ有効なら lengthレジスタがオーバーフローするまでインクリメント */
+        /* オーバーフローした場合 Update() 側で再生が停止される */
+        if (!square_register->is_enable_length()){
+            return;
+        }
+
+        uint8_t length = square_register->length();
+        if (length == 0){
+            return;
+        }
+
+        square_register->set_length(length + 1);
+    }
+
+}
+
+inline void SquareWaveProcessor::InnerEnvelopeUpdate()
+{
     static uint8_t tick = 0;
 
     if (square_register->envelope_step_time() == 0){
@@ -118,6 +156,7 @@ void SquareWaveProcessor::EnvelopeUpdate()
         }
     }
 }
+ 
 
 inline void SquareWaveProcessor::FrequencyUpdate()
 {

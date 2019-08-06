@@ -29,6 +29,7 @@ public:
 
 private:
     inline void FrequencyUpdate();
+    inline void InnerEnvelopeUpdate();
 
 private: 
     DAC& dac;

@@ -28,7 +28,9 @@ void SquareSoundControl::onKeyOn(uint8_t note_num)
     setting.set_is_start(true);
     setting.set_init_volume(0x00);
     setting.set_is_envelope_increment(true);
-    setting.set_envelope_step_time(3);
+    setting.set_envelope_step_time(1);
+    setting.set_is_enable_length(true);
+    setting.set_length(2);
 
     UpdateSound();
 }
