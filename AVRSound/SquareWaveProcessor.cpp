@@ -39,22 +39,6 @@ void SquareWaveProcessor::Initialize()
     TCCR1B = 0b00001010;
     TIMSK1 = 0b00000010;
 
-    /* REGISTER 設定初期化 */
-    /* 矩形波に設定 */
-    /* ボリューム最大 */
-    square_register->set_init_volume(15);
-    /* 無音 */
-    square_register->set_is_start(false);
-    /* 発音持続 */
-    square_register->set_length(0);
-    square_register->set_is_enable_length(false);
-    /* エンベロープ無効 */
-    square_register->set_envelope_step_time(0);
-    /* 最遅割り込みにとりあえず設定 */
-    square_register->set_frequency(0);
-    /* 再生中フラグはオフ */
-    sound_register.TOTAL.BIT.is_key_on_square1 = 0;
-
     /* レジスタ値に応じた割り込み時間を設定 */
     FrequencyUpdate();
 }

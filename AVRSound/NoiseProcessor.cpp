@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 
+
 namespace AVRSound {
 
 const uint8_t NoiseProcessor::VOLUME_TABLE[16] = {0, 17, 34, 51, 68, 85, 102, 119, 136, 153, 170, 187, 204, 221, 237, 255};
@@ -24,17 +25,7 @@ void NoiseProcessor::Initialize()
     TCCR1A = 0b00000000;
     TCCR1B = 0b00001010;
     TIMSK1 = 0b00000010;
-    
  
-    /* 再生中フラグはオフ */
-    sound_register.TOTAL.BIT.is_key_on_noise = 0;
-
-    sound_register.TOTAL.BIT.is_output_enable = 1;
-    sound_register.SOUND4.set_freq_bit_shift(8);
-    sound_register.SOUND4.set_freq_divider(1);
-    sound_register.SOUND4.set_is_start(1);
-    sound_register.SOUND4.set_init_volume(15);
-
     /* レジスタ値に応じた割り込み時間を設定 */
     FrequencyUpdate();
 }

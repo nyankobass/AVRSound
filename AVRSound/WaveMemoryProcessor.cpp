@@ -25,22 +25,6 @@ void WaveMemoryProcessor::Initialize()
     TCCR1B = 0b00001010;
     TIMSK1 = 0b00000010;
 
-    /* REGISTER 設定初期化 */
-    /* ボリューム最大 */
-    sound_register.SOUND3.set_volume(1);
-    /* 無音 */
-    sound_register.SOUND3.set_is_start(false);
-    /* 発音持続 */
-    sound_register.SOUND3.set_length(0);
-    sound_register.SOUND3.set_is_enable_length(false);
-    /* 最遅割り込みにとりあえず設定 */
-    sound_register.SOUND3.set_frequency(0);
-    /* 再生中フラグはオフ */
-    sound_register.TOTAL.BIT.is_key_on_wave_memory = 0;
-    
-    /* 有効化 */
-    sound_register.SOUND3.set_is_sound_on(1);
-
     static const uint8_t memory[32] = {
         15, 15, 14, 14, 13, 13, 12, 12, 11, 11, 10, 10,  9,  9,  8,  8,
          7,  7,  6,  6,  5,  5,  4,  4,  3,  3,  2,  2,  1,  1,  0,  0,

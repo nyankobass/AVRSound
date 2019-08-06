@@ -23,16 +23,41 @@ namespace {
     /* DAC 制御 */
     AVRSound::DAC dac;
 
-    /* 矩形波出力モジュール */
+    /* 各種波形生成プロセッサー一覧 */
     AVRSound::SquareWaveProcessor square_wave1_processor(dac, sound_register, 0);
     AVRSound::SquareWaveProcessor square_wave2_processor(dac, sound_register, 1);
     AVRSound::WaveMemoryProcessor wave_memory_processor(dac, sound_register);
     AVRSound::NoiseProcessor      noise_processor(dac, sound_register);
 
-    uint8_t mode = 2;
+    /* 各種プロセッサーを扱うインターフェース */
+    AVRSound::IProcessor* processor = &square_wave1_processor;
 
-    inline UpdateMode(){
+    inline void ChangeProcess(){
+        static uint8_t pre_total_byte = sound_register.TOTAL.BYTE[0];
         
+        if (pre_total_byte == sound_register.TOTAL.BYTE[0]){
+            return;
+        }
+
+        pre_total_byte = sound_register.TOTAL.BYTE[0];
+
+        if (sound_register.TOTAL.BYTE[0] == 0b10000001){
+            processor = &square_wave1_processor;
+        }
+        else if (sound_register.TOTAL.BYTE[0] == 0b10000010){
+            processor = &square_wave2_processor;
+        }
+        else if (sound_register.TOTAL.BYTE[0] == 0b10000100){
+            processor = &wave_memory_processor;
+        }
+        else if (sound_register.TOTAL.BYTE[0] == 0b10001000){
+            processor = &noise_processor;
+        }
+        else {
+            return;
+        }
+
+        processor->Initialize();
     }
 }
 
@@ -44,45 +69,20 @@ void setup()
     dac.Initialize();
 
     /* 出力モジュール初期化 */
-    switch (mode)
-    {
-    case 0:
-        square_wave1_processor.Initialize();
-        break;
-    case 1:
-        square_wave2_processor.Initialize();
-        break;
-    case 2:
-        wave_memory_processor.Initialize();
-        break;
-    case 3:
-        noise_processor.Initialize();
-        break;
-    default:
-        square_wave1_processor.Initialize();
-        break;
-    }
+    processor->Initialize();
 
     /* デバッグ用出力ピン設定 */
     pinMode(2, OUTPUT);
     pinMode(3, OUTPUT);
 
-    /* 出力ON */
-    sound_register.TOTAL.BIT.is_output_enable = 1;
-
-    /* CH1 設定 */
-    sound_register.SOUND1.set_is_start(true);
-
-    /* CH3 設定 */
-    sound_register.SOUND3.set_is_start(true);
-    sound_register.SOUND3.set_frequency(1910);
-
+    /* I2C 初期化 */
     Wire.begin(0x30);
     Wire.onReceive(onI2CReceived);
 }
 
 void loop()
 {
+    /* 基本的な処理はすべて割り込みにて行う */
 }
 
 /* 再生周波数に応じた周期で呼び出される */
@@ -91,24 +91,7 @@ void onTimerEvent()
     /* 処理時間計測用に割り込み中port2をHIGHにする  */
     PORTD |= 0b00000100;
 
-    switch (mode)
-    {
-    case 0:
-        square_wave1_processor.Update();
-        break;
-    case 1:
-        square_wave2_processor.Update();
-        break;
-    case 2:
-        wave_memory_processor.Update();
-        break;
-    case 3:
-        noise_processor.Update();
-        break;
-    default:
-        square_wave1_processor.Update();
-        break;
-    }
+    processor->Update();
 
     PORTD &= 0b11111011;
 }
@@ -126,7 +109,13 @@ void onI2CReceived(int byte_num)
         return;
     }
 
-    sound_register.write_byte(byte_data[0], &byte_data[1], read_size - 1);
+    const uint8_t addr = byte_data[0];
+    sound_register.write_byte(addr, &byte_data[1], read_size - 1);
+
+    /* 全体設定を弄った時だけ、プロセス変更の可能性がある */
+    if (addr == REGISTER::TOTAL_ADDR){
+        ChangeProcess();
+    }
 
     return;
 }

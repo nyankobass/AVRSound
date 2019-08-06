@@ -1,13 +1,14 @@
 #ifndef __NOISE_PROCESSOR__
 #define __NOISE_PROCESSOR__
 
+#include "IProcessor.h"
 #include "Register.h"
 #include "DAC.h"
 
 namespace AVRSound
 {
 
-class NoiseProcessor
+class NoiseProcessor : public IProcessor
 {
 public:
     /*! =============================================
@@ -15,24 +16,12 @@ public:
      * @param[in] sound_register レジスタの参照
      *! ============================================= */
     NoiseProcessor(DAC& dac, volatile REGISTER& sound_register);
-    ~NoiseProcessor();
+    ~NoiseProcessor() override;
 
-    /*! =============================================
-     * @brief 初期化処理を行う
-     * @attention Timer1 / Timer2 の割り込み設定を行います。
-     *! ============================================= */
-    void Initialize();
-
-    /*! =============================================
-     * @brief 出力の更新を行う
-     * @attention TIMER1_COMPA_vect 割り込み中に実行すること
-     *! ============================================= */
-    void Update();
-
-    /*! =============================================
-     * @brief エンベロープの更新を行う
-     *! ============================================= */
-    void EnvelopeUpdate();
+    /* IProcessor 継承 */
+    void Initialize() override;
+    void Update() override;
+    void EnvelopeUpdate() override;
 
 private:
     inline void FrequencyUpdate();
