@@ -164,6 +164,13 @@ inline void SquareWaveProcessor::FrequencyUpdate()
 {
     uint16_t ocr = (2048 - square_register->frequency()) << 1;
 
+    /* @note 速すぎると、その他の割り込みが処理できないため制限をかける */
+    /*       約2kHz までの出力に対応する。 */
+    /*       116 = (2048 - 1990) << 1 */
+    if (ocr <= 116){
+        ocr = 116;
+    }
+
     OCR1A = ocr;
 }
 

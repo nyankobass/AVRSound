@@ -123,7 +123,14 @@ void WaveMemoryProcessor::onTimer2Event()
 inline void WaveMemoryProcessor::FrequencyUpdate()
 {
     uint16_t ocr = (2048 - wave_memory_register->frequency());
-
+    
+    /* @note 速すぎると、その他の割り込みが処理できないため制限をかける */
+    /*       約1kHz までの出力に対応する。 */
+    /*       116 = (2048 - 1990) << 1 */
+    if (ocr <= 116){
+        ocr = 116;
+    }
+    
     OCR1A = ocr;
 }
 
