@@ -17,7 +17,7 @@ ISR(TIMER1_COMPA_vect) //timer1でのコンペアマッチAの割り込み関数
     AVRSound::onTimerEvent();
 }
 
-ISR(TIMER2_COMPA_vect) //timer1でのコンペアマッチAの割り込み関数
+ISR(TIMER2_COMPA_vect) //timer2でのコンペアマッチAの割り込み関数
 {
     AVRSound::onTimer2Event();
 }

@@ -7,17 +7,12 @@
 
 namespace AVRSound {
 
-/*! =============================================
- * @brief ATmega328 矩形波生成モジュール
- * @attention Timer1 / Timer2 を占有します
- *! ============================================= */
 class WaveMemoryProcessor : public IProcessor
 {
 public:
     /*! =============================================
      * @brief コンストラクタ
      * @param[in] sound_register レジスタの参照
-     * @param[in] index 0:矩形波1 0以外:矩形波2
      *! ============================================= */
     WaveMemoryProcessor(DAC& dac, volatile REGISTER& sound_register);
     ~WaveMemoryProcessor();

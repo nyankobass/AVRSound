@@ -1,3 +1,13 @@
+/** =========================================================================
+ * @file    RegisterClientSynchronizer.h
+ * @brief   レジスタの同期処理を行う。
+ * @author  nyankobass
+ * @date    2019/08/07
+ * 
+ * @note    同期処理と言えば聞こえはいいが、
+ *          その実Master側からの一方的な書き込みが行われるのみである。
+ *          今のところ Master 側から Read することもできない。
+ * ========================================================================== */
 #ifndef __REGISTER_CLIENT_SYNCHRONIZER__
 #define __REGISTER_CLIENT_SYNCHRONIZER__
 

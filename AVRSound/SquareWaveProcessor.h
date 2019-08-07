@@ -7,10 +7,6 @@
 
 namespace AVRSound {
 
-/*! =============================================
- * @brief ATmega328 矩形波生成モジュール
- * @attention Timer1 / Timer2 を占有します
- *! ============================================= */
 class SquareWaveProcessor : public IProcessor
 {
 public:
