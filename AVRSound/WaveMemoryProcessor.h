@@ -24,8 +24,8 @@ public:
 
     /* IProcessor 継承 */
     void Initialize() override;
-    void Update() override;
-    void EnvelopeUpdate() override;
+    void onTimer1Event() override;
+    void onTimer2Event() override;
 
 private:
     inline void FrequencyUpdate();

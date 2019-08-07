@@ -53,7 +53,7 @@ void SquareWaveProcessor::Initialize()
     OCR2A = 61;
 }
 
-void SquareWaveProcessor::Update()
+void SquareWaveProcessor::onTimer1Event()
 {
     static uint8_t wave_table_index = 0;
     static uint16_t pre_frequency = 0;
@@ -62,7 +62,7 @@ void SquareWaveProcessor::Update()
 
 
     /* 停止指示が出ていれば終了 */
-    if (square_register->BYTE[1] == 0x00) {
+    if (square_register->BYTE[2] == 0x00) {
         output_volume_buffer = 0x80;
         sound_register.TOTAL.BIT.is_key_on_square1 = 0;
         return;
@@ -98,7 +98,7 @@ void SquareWaveProcessor::Update()
     wave_table_index = (wave_table_index + 1) & 0b0000111;
 }
 
-void SquareWaveProcessor::EnvelopeUpdate()
+void SquareWaveProcessor::onTimer2Event()
 {
     /* 1/256[s] 毎に呼び出される */
     {
@@ -107,7 +107,7 @@ void SquareWaveProcessor::EnvelopeUpdate()
 
         /* 1/256 * 4 = 1/64[s] 毎に呼び出し */
         if(envelope_tick >= 4){
-            InnerEnvelopeUpdate();
+            EnvelopeUpdate();
             envelope_tick = 0;
         }
     }
@@ -129,7 +129,7 @@ void SquareWaveProcessor::EnvelopeUpdate()
 
 }
 
-inline void SquareWaveProcessor::InnerEnvelopeUpdate()
+inline void SquareWaveProcessor::EnvelopeUpdate()
 {
     static uint8_t tick = 0;
 

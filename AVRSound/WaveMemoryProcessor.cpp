@@ -55,7 +55,7 @@ void WaveMemoryProcessor::Initialize()
     FrequencyUpdate();
 }
 
-void WaveMemoryProcessor::Update()
+void WaveMemoryProcessor::onTimer1Event()
 {
     static uint8_t wave_table_index = 0;
     static uint16_t pre_frequency = 0;
@@ -104,7 +104,7 @@ void WaveMemoryProcessor::Update()
     wave_table_index = (wave_table_index + 1) & 0b0011111;
 }
 
-void WaveMemoryProcessor::EnvelopeUpdate()
+void WaveMemoryProcessor::onTimer2Event()
 {
     /* 長さ有効なら lengthレジスタがオーバーフローするまでインクリメント */
     /* オーバーフローした場合 Update() 側で再生が停止される */

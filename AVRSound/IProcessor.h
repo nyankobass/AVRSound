@@ -18,16 +18,16 @@ public:
     virtual void Initialize() = 0;
 
     /*! =============================================
-     * @brief 出力の更新を行う
+     * @brief Timer1割り込み時呼出し
      * @attention TIMER1_COMPA_vect 割り込み中に実行すること
      *! ============================================= */
-    virtual void Update() = 0;
+    virtual void onTimer1Event() = 0;
 
     /*! =============================================
-     * @brief エンベロープの更新を行う
+     * @brief Timer2割り込み時呼出し
      * @attention TIMER2_COMPA_vect 割り込み中に実行すること
      *! ============================================= */
-    virtual void EnvelopeUpdate() = 0;
+    virtual void onTimer2Event() = 0;
 
 };
 

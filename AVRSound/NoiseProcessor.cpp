@@ -41,7 +41,7 @@ void NoiseProcessor::Initialize()
     OCR2A = 61;
 }
 
-void NoiseProcessor::Update()
+void NoiseProcessor::onTimer1Event()
 {
     static uint16_t reg = 0xFFFF;
     static uint8_t output = 1;
@@ -98,7 +98,7 @@ void NoiseProcessor::Update()
     }
 
 }
-void NoiseProcessor::EnvelopeUpdate()
+void NoiseProcessor::onTimer2Event()
 {
     /* 1/256[s] 毎に呼び出される */
     {
@@ -107,7 +107,7 @@ void NoiseProcessor::EnvelopeUpdate()
 
         /* 1/256 * 4 = 1/64[s] 毎に呼び出し */
         if(envelope_tick >= 4){
-            InnerEnvelopeUpdate();
+            EnvelopeUpdate();
             envelope_tick = 0;
         }
     }
@@ -128,7 +128,7 @@ void NoiseProcessor::EnvelopeUpdate()
     }
 }
 
-inline void NoiseProcessor::InnerEnvelopeUpdate()
+inline void NoiseProcessor::EnvelopeUpdate()
 {
     static uint8_t tick = 0;
 

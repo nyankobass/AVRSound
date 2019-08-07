@@ -98,14 +98,14 @@ void onTimerEvent()
     /* 処理時間計測用に割り込み中port2をHIGHにする  */
     DbgPin2High();
 
-    processor->Update();
+    processor->onTimer1Event();
 
     DbgPin2Low();
 }
 
 void onTimer2Event()
 {
-    processor->EnvelopeUpdate();
+    processor->onTimer2Event();
 
 }
 
@@ -113,6 +113,7 @@ void onTimer2Event()
 /* I2C 受信時 */
 void onI2CReceived(int byte_num)
 {
+    DbgPin3High();
     /* @note 32 : wire の受信バッファのサイズ */
     uint8_t byte_data[32] = {0};
     
@@ -130,6 +131,8 @@ void onI2CReceived(int byte_num)
     if (addr == REGISTER::TOTAL_ADDR){
         ChangeProcess();
     }
+
+    DbgPin3Low();
 
     return;
 }
