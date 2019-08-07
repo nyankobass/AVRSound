@@ -81,7 +81,7 @@ void NoiseProcessor::onTimer1Event()
         FrequencyUpdate();
     }
 
-    else {
+    {
         /* 線形帰還シフトレジスタ */
         bool short_freq = noise_register->is_short_freq();
         if(reg == 0)reg = 1; //一応
