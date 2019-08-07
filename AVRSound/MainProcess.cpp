@@ -5,6 +5,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
+#include "DbgApi.h"
 #include "Register.h"
 #include "SquareWaveProcessor.h"
 #include "WaveMemoryProcessor.h"
@@ -95,11 +96,11 @@ void loop()
 void onTimerEvent()
 {
     /* 処理時間計測用に割り込み中port2をHIGHにする  */
-    PORTD |= 0b00000100;
+    DbgPin2High();
 
     processor->Update();
 
-    PORTD &= 0b11111011;
+    DbgPin2Low();
 }
 
 void onTimer2Event()

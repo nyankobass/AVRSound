@@ -1,7 +1,7 @@
 #include "NoiseProcessor.h"
 
 #include <Arduino.h>
-
+#include "DbgApi.h"
 
 namespace AVRSound {
 
@@ -11,6 +11,7 @@ NoiseProcessor::NoiseProcessor(DAC& _dac, volatile REGISTER& _sound_register)
     : sound_register(_sound_register) 
     , dac(_dac)
 {
+    noise_register = &sound_register.SOUND4;
 }
 
 NoiseProcessor::~NoiseProcessor()
@@ -28,6 +29,16 @@ void NoiseProcessor::Initialize()
  
     /* レジスタ値に応じた割り込み時間を設定 */
     FrequencyUpdate();
+    
+
+    /* Timer2 割り込み設定 */
+    /* CTC 1024分周 */
+    TCCR2A = 0b00000010;
+    TCCR2B = 0b00000111;
+    TIMSK2 = 0b00000010;
+
+    /* 1/256[s] 毎に割り込みが発生するように設定 */
+    OCR2A = 61;
 }
 
 void NoiseProcessor::Update()
@@ -40,38 +51,39 @@ void NoiseProcessor::Update()
 
     dac.Output(output_volume_buffer);
 
-    /* 出力が有効でなければ終了 */
-    if (sound_register.TOTAL.BIT.is_output_enable == 0) {
+    /* 停止指示が出ていれば終了 */
+    if (noise_register->BYTE[2] == 0) {
         output_volume_buffer = 0x80;
         sound_register.TOTAL.BIT.is_key_on_noise = 0;
         return;
     }
 
-    /* 再生フラグが立っていなければ終了 */
-    if (sound_register.SOUND4.is_start() == false) {
+    /* 長さ有効かつ長さ0なら終了 */
+    if (noise_register->is_enable_length() && (noise_register->length() == 0)){
         output_volume_buffer = 0x80;
-        sound_register.TOTAL.BIT.is_key_on_noise = 0;
+        sound_register.TOTAL.BIT.is_key_on_square1 = 0;
         return;
     }
 
     /* 再生開始処理 */
-    if (sound_register.TOTAL.BIT.is_key_on_noise == 0) {
+    if (noise_register->is_start()) {
         reg = 0xFF;
         output = 1;
-        volume_index = sound_register.SOUND4.init_volume();
+        volume_index = noise_register->init_volume();
+        noise_register->set_is_start(false);
         sound_register.TOTAL.BIT.is_key_on_noise = 1;
     }
 
     /* 周波数の変更が生じていた場合、割り込み時間を修正 */
-    if ((pre_freq_divider != sound_register.SOUND4.freq_divider()) || (pre_freq_bit_shift != sound_register.SOUND4.freq_bit_shift())) {
-        pre_freq_divider= sound_register.SOUND4.freq_divider();
-        pre_freq_bit_shift = sound_register.SOUND4.freq_bit_shift();
+    if ((pre_freq_divider != noise_register->freq_divider()) || (pre_freq_bit_shift != noise_register->freq_bit_shift())) {
+        pre_freq_divider= noise_register->freq_divider();
+        pre_freq_bit_shift = noise_register->freq_bit_shift();
         FrequencyUpdate();
     }
 
     {
         /* 線形帰還シフトレジスタ */
-        bool short_freq = sound_register.SOUND4.is_short_freq();
+        bool short_freq = noise_register->is_short_freq();
         if(reg == 0)reg = 1; //一応
         reg += reg + (((reg >> (short_freq ? 6 : 14)) ^ (reg >> (short_freq ? 5 : 13))) & 1);
         output ^= reg & 1;
@@ -88,13 +100,66 @@ void NoiseProcessor::Update()
 }
 void NoiseProcessor::EnvelopeUpdate()
 {
+    /* 1/256[s] 毎に呼び出される */
+    {
+        static uint8_t envelope_tick = 0;
+        envelope_tick++;
 
+        /* 1/256 * 4 = 1/64[s] 毎に呼び出し */
+        if(envelope_tick >= 4){
+            InnerEnvelopeUpdate();
+            envelope_tick = 0;
+        }
+    }
+
+    {
+        /* 長さ有効なら lengthレジスタがオーバーフローするまでインクリメント */
+        /* オーバーフローした場合 Update() 側で再生が停止される */
+        if (!noise_register->is_enable_length()){
+            return;
+        }
+
+        uint8_t length = noise_register->length();
+        if (length == 0){
+            return;
+        }
+
+        noise_register->set_length(length + 1);
+    }
 }
 
+inline void NoiseProcessor::InnerEnvelopeUpdate()
+{
+    static uint8_t tick = 0;
+
+    if (noise_register->envelope_step_time() == 0){
+        return;
+    }
+
+    tick += 1;
+
+    if (noise_register->envelope_step_time() > tick) {
+        return;
+    }
+
+    tick = 0;
+    DbgPin3Latch();
+    if (noise_register->is_envelope_increment()) {
+        if (volume_index < 0x0F) {
+            volume_index = volume_index + 1;
+        }
+    }
+    else {
+        if (volume_index != 0) {
+            volume_index = volume_index - 1;
+        }
+    }
+}
+ 
 inline void NoiseProcessor::FrequencyUpdate()
 {
-    const uint8_t freq_bit_shift = sound_register.SOUND4.freq_bit_shift();
-    const uint8_t freq_divider = sound_register.SOUND4.freq_divider();
+    const uint8_t freq_bit_shift = noise_register->freq_bit_shift();
+    const uint8_t freq_divider = noise_register->freq_divider();
 
 
 

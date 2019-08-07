@@ -4,6 +4,7 @@
 #include "Register.h"
 #include "ISoundControl.h"
 #include "SquareSoundControl.h"
+#include "NoiseSoundControl.h"
 
 namespace{
     uint8_t KEY_TO_NOTE[28] = {
@@ -13,6 +14,7 @@ namespace{
     AVRSound::REGISTER sound_register;
 
     AVRSound::SquareSoundControl square_sound_control;
+    AVRSound::NoiseSoundControl noise_sound_control;
 
     AVRSound::ISoundControl* sound_control = &square_sound_control;
 }
@@ -44,6 +46,16 @@ void loop()
         uint8_t data = Serial.read();
 
         uint8_t note_number = 0;
+
+        /* プロセス変更 */
+        if (data == '1'){
+            sound_control = &square_sound_control;
+            sound_control->Initialize();
+        }
+        else if (data == '4'){
+            sound_control = &noise_sound_control;
+            sound_control->Initialize();
+        }
 
         if (data == 'z'){
             oct = max(oct - 12, 36);

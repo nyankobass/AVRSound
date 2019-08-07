@@ -25,10 +25,12 @@ public:
 
 private:
     inline void FrequencyUpdate();
+    inline void InnerEnvelopeUpdate();
 
 private: 
     DAC& dac;
     volatile REGISTER& sound_register;
+    volatile NOISE_SETTING* noise_register;
 
     volatile uint8_t volume_index = 0;
     volatile uint8_t output_volume_buffer = 0;
