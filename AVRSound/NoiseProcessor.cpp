@@ -5,7 +5,7 @@
 
 namespace AVRSound {
 
-const uint8_t NoiseProcessor::VOLUME_TABLE[16] = {0, 17, 34, 51, 68, 85, 102, 119, 136, 153, 170, 187, 204, 221, 237, 255};
+const uint8_t NoiseProcessor::VOLUME_TABLE[16] = {0, 8, 17, 25, 34, 42, 51, 59, 68, 76, 85, 93, 102, 110, 119, 127};
 
 NoiseProcessor::NoiseProcessor(DAC& _dac, volatile REGISTER& _sound_register)
     : sound_register(_sound_register) 
@@ -81,19 +81,18 @@ void NoiseProcessor::onTimer1Event()
         FrequencyUpdate();
     }
 
-    {
+    else {
         /* 線形帰還シフトレジスタ */
         bool short_freq = noise_register->is_short_freq();
         if(reg == 0)reg = 1; //一応
         reg += reg + (((reg >> (short_freq ? 6 : 14)) ^ (reg >> (short_freq ? 5 : 13))) & 1);
         output ^= reg & 1;
 
-        output_volume_buffer = 0;
-        if (output != 0){
-            output_volume_buffer = VOLUME_TABLE[volume_index];
+        if (output != 0) {
+            output_volume_buffer = 0x80 + VOLUME_TABLE[volume_index];
         }
-        else{
-
+        else {
+            output_volume_buffer = 0x80 - VOLUME_TABLE[volume_index];
         }
     }
 

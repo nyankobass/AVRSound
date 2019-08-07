@@ -12,7 +12,7 @@ const uint8_t SquareWaveProcessor::WAVE_PATTERN_TABLE[WAVE_PATTERN_MAX][8] = {
     {1,1,1,1,0,0,1,1},  /* duty : 75% */
 };
 
-const uint8_t SquareWaveProcessor::VOLUME_TABLE[16] = {0, 17, 34, 51, 68, 85, 102, 119, 136, 153, 170, 187, 204, 221, 237, 255};
+const uint8_t SquareWaveProcessor::VOLUME_TABLE[16] = {0, 8, 17, 25, 34, 42, 51, 59, 68, 76, 85, 93, 102, 110, 119, 127};
 
 SquareWaveProcessor::SquareWaveProcessor(DAC& _dac, volatile REGISTER& _sound_register, uint8_t index)
     : sound_register(_sound_register) 
@@ -90,9 +90,11 @@ void SquareWaveProcessor::onTimer1Event()
     }
 
     /* 出力バッファに格納 */
-    output_volume_buffer = 0;
     if (WAVE_PATTERN_TABLE[square_register->wave_pattern()][wave_table_index] != 0) {
-        output_volume_buffer = VOLUME_TABLE[volume_index];
+        output_volume_buffer = 0x80 + VOLUME_TABLE[volume_index];
+    }
+    else{
+        output_volume_buffer = 0x80 - VOLUME_TABLE[volume_index];
     }
 
     wave_table_index = (wave_table_index + 1) & 0b0000111;
