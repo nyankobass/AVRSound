@@ -23,8 +23,6 @@ private:
     void UpdateSound();
 
     NOISE_SETTING setting;
-
-    static const uint16_t FREQ_TABLE[0xFF];
 };
 
 }
