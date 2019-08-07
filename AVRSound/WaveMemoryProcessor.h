@@ -33,6 +33,7 @@ private:
 private: 
     DAC& dac;
     volatile REGISTER& sound_register;
+    volatile WAVE_MEMORY_SETTING* wave_memory_register;
 
     volatile uint8_t output_volume_buffer = 0;
 };

@@ -32,6 +32,8 @@ inline void DbgPin3Latch(){
     else {
         DbgPin3Low();
     }
+
+    is_on = !is_on;
 }
 }
 

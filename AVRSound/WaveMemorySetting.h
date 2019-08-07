@@ -26,7 +26,7 @@ public:
         return (BYTE[0] >> 7) & 0b00000001;
     }
     void set_is_sound_on(bool value) volatile {
-        BYTE[0] = (BYTE[0] & 0b01111111) + (((uint8_t)(value) << 7) & 0b00000001);
+        BYTE[0] = (BYTE[0] & 0b01111111) + (((uint8_t)(value) << 7) & 0b10000000);
     }
 
     /* 発音の長さ */

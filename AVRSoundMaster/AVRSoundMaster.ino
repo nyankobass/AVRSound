@@ -4,6 +4,7 @@
 #include "Register.h"
 #include "ISoundControl.h"
 #include "SquareSoundControl.h"
+#include "WaveMemoryControl.h"
 #include "NoiseSoundControl.h"
 
 namespace{
@@ -14,6 +15,7 @@ namespace{
     AVRSound::REGISTER sound_register;
 
     AVRSound::SquareSoundControl square_sound_control;
+    AVRSound::WaveMemoryControl wave_memory_control;
     AVRSound::NoiseSoundControl noise_sound_control;
 
     AVRSound::ISoundControl* sound_control = &square_sound_control;
@@ -52,6 +54,11 @@ void loop()
             sound_control = &square_sound_control;
             sound_control->Initialize();
         }
+        else if (data == '3'){
+            sound_control = &wave_memory_control;
+            sound_control->Initialize();
+        }
+
         else if (data == '4'){
             sound_control = &noise_sound_control;
             sound_control->Initialize();

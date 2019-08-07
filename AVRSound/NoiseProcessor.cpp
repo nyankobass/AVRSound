@@ -143,7 +143,6 @@ inline void NoiseProcessor::InnerEnvelopeUpdate()
     }
 
     tick = 0;
-    DbgPin3Latch();
     if (noise_register->is_envelope_increment()) {
         if (volume_index < 0x0F) {
             volume_index = volume_index + 1;
