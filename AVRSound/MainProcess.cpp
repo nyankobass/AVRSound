@@ -10,6 +10,7 @@
 #include "SquareWaveProcessor.h"
 #include "WaveMemoryProcessor.h"
 #include "NoiseProcessor.h"
+#include "RegisterClientSynchronizer.h"
 
 ISR(TIMER1_COMPA_vect) //timer1でのコンペアマッチAの割り込み関数
 {
@@ -72,6 +73,9 @@ namespace AVRSound{
 
 void setup()
 {
+    /* レジスタ同期モジュール駆動 */
+    RegisterClientSynchronizer::Begin(sound_register, 0x30, onRegisterChanged);
+
     /* dac 初期化 */
     dac.Initialize();
 
@@ -81,10 +85,6 @@ void setup()
     /* デバッグ用出力ピン設定 */
     pinMode(2, OUTPUT);
     pinMode(3, OUTPUT);
-
-    /* I2C 初期化 */
-    Wire.begin(0x30);
-    Wire.onReceive(onI2CReceived);
 }
 
 void loop()
@@ -92,7 +92,6 @@ void loop()
     /* 基本的な処理はすべて割り込みにて行う */
 }
 
-/* 再生周波数に応じた周期で呼び出される */
 void onTimerEvent()
 {
     /* 処理時間計測用に割り込み中port2をHIGHにする  */
@@ -109,31 +108,12 @@ void onTimer2Event()
 
 }
 
-
-/* I2C 受信時 */
-void onI2CReceived(int byte_num)
+void onRegisterChanged(uint8_t addr, uint8_t byte_num)
 {
-    DbgPin3High();
-    /* @note 32 : wire の受信バッファのサイズ */
-    uint8_t byte_data[32] = {0};
-    
-    /* @note そもそも Wire.readBytes に sound_register の 該当する BYTE を渡せば2重コピーしなくても済む */
-    uint8_t read_size = Wire.readBytes(byte_data, byte_num);
-
-    if (read_size < 2){
-        return;
-    }
-
-    const uint8_t addr = byte_data[0];
-    sound_register.write_byte(addr, &byte_data[1], read_size - 1);
-
-    /* 全体設定を弄った時だけ、プロセス変更の可能性がある */
     if (addr == REGISTER::TOTAL_ADDR){
         ChangeProcess();
     }
-
-    DbgPin3Low();
-
+    
     return;
 }
 
