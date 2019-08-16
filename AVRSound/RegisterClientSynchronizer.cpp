@@ -1,6 +1,7 @@
 #include "RegisterClientSynchronizer.h"
 
 #include <Wire.h>
+#include <avr/interrupt.h>
 #include "DbgApi.h"
 
 namespace 
@@ -33,6 +34,10 @@ namespace
 
 void onI2CReceived(int byte_num)
 {
+    /* @note Wire ライブラリ内にて（おそらく）割り込み禁止が設定されているクリティカルパス */
+    /*       しかし、下記処理に時間がかかりすぎるため割り込み禁止を解除する */
+    /*       プチノイズ対策。ある程度改善できるがI2Cを自前で実装すること推奨 */
+    sei();
     /* 処理時間計測用に割り込み中port3をHIGHにする  */
     AVRSound::DbgPin3Latch();
     
@@ -51,6 +56,8 @@ void onI2CReceived(int byte_num)
         return;
     }
 
+    cli();
+    
     const uint8_t addr = byte_data[0];
     setting->write_byte(addr, &byte_data[1], read_size - 1);
 
