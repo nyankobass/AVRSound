@@ -22,8 +22,9 @@ void DAC::Initialize()
 /*              別ICを利用する場合は実装を変更すること */
 void DAC::OutputL(uint8_t value)
 {
-    uint8_t byte_h = 0b00110000 + ((value >> 4) & 0b00001111);
-    uint8_t byte_l = (value << 4) & 0b11110000;
+    uint16_t _value = (((uint16_t)value) << 3) + (1 << 10);
+    uint8_t byte_h = 0b00110000 + (_value >> 8);
+    uint8_t byte_l = _value;
 
     /* SS (10pin:PB2) を LOW に */
     PORTB &= 0b11111011;
@@ -39,8 +40,9 @@ void DAC::OutputL(uint8_t value)
 /*              別ICを利用する場合は実装を変更すること */
 void DAC::OutputR(uint8_t value)
 {
-    uint8_t byte_h = 0b00110000 + ((value >> 4) & 0b00001111);
-    uint8_t byte_l = (value << 4) & 0b11110000;
+    uint16_t _value = (((uint16_t)value) << 3) + (1 << 10);
+    uint8_t byte_h = 0b00110000 + (_value >> 8);
+    uint8_t byte_l = _value;
 
     /* SS (10pin:PB2) を LOW に */
     PORTB &= 0b11111011;
