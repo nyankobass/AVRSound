@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+    <script src="midi.js"></script>
+
+    <div class="kakomi-box">
+        <span class="title-box">MIDI Device Select</span>
+        input: <select id="midi-input">
+        </select><span id="virtual-input"></span><br><br>
+        output: <select id="midi-output">
+        </select><span id="virtual-output"></span><br>
+    </div>
+
+    <div class="kakomi-box" id="general-slider">
+        <span class="title-box">General</span>
+
+    </div>
+
+    <div class="kakomi-box" id="vibrato-slider">
+        <span class="title-box">Vibrato</span>
+    </div>
+
+    <div class="kakomi-box" id="reverb-slider">
+        <span class="title-box">Reverb</span>
+    </div>
+
+    <div id="msg" style="margin:30px;"></div>
+</body>
+
+</html>
