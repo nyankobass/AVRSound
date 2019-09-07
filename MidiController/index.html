@@ -8,25 +8,59 @@
 <body>
     <script src="midi.js"></script>
 
-    <div class="kakomi-box">
-        <span class="title-box">MIDI Device Select</span>
-        input: <select id="midi-input">
-        </select><span id="virtual-input"></span><br><br>
-        output: <select id="midi-output">
-        </select><span id="virtual-output"></span><br>
-    </div>
+    <div id="container">
+        <div id="left-box">
+            <div class="kakomi-box">
+                <span class="title-box">MIDI Device Select</span>
+                input: <select id="midi-input">
+                </select><span id="virtual-input"></span><br><br>
+                output: <select id="midi-output">
+                </select><span id="virtual-output"></span><br>
+            </div>
 
-    <div class="kakomi-box" id="general-slider">
-        <span class="title-box">General</span>
+            <div class="kakomi-box">
+                <span class="title-box">PreSet</span>
+                <table id="preset-table">
+                    <tr>
+                        <th class="preset-name">Title</th>
+                        <th class="preset-function">Recall</th>
+                        <th class="preset-function">Delete</th>
+                    </tr>
+                    <tr>
+                        <td class="preset-name">Init</td>
+                        <td class="preset-function"><button type=button onclick="load_preset('Init')"> Recall </button></td>
+                        <td class="preset-function"></td>
+                    </tr>
+                    <tr>
+                        <td class="preset-name">Init</td>
+                        <td class="preset-function"><button type=button onclick="load_preset('Init')"> Recall </button></td>
+                        <td class="preset-function"><button type=button onclick="load_preset('Init')"> Delete </button></td>
+                    </tr>
+                </table>
+                
+                <table id="store-box">
+                    <tr>
+                        <td> ID <input id="store-id-box" type="text" name="name" size="8" maxlength="1"></td>
+                        <td> Title <input id="store-name-box" type="text" name="name" size="20" maxlength="20"></td>
+                        <td><a class="border_slide_btn" href="#" onclick="onStore()"> Store </a></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
 
-    </div>
+        <div id="right-box">
+            <div class="kakomi-box" id="general-slider">
+                <span class="title-box">General</span>
+            </div>
 
-    <div class="kakomi-box" id="vibrato-slider">
-        <span class="title-box">Vibrato</span>
-    </div>
+            <div class="kakomi-box" id="vibrato-slider">
+                <span class="title-box">Vibrato</span>
+            </div>
 
-    <div class="kakomi-box" id="reverb-slider">
-        <span class="title-box">Reverb</span>
+            <div class="kakomi-box" id="reverb-slider">
+                <span class="title-box">Reverb</span>
+            </div>
+        </div>
     </div>
 
     <div id="msg" style="margin:30px;"></div>

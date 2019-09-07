@@ -1,9 +1,12 @@
+/* プリセット保存用 WebStorage */
+const session = localStorage
+
 const midi_output_list = [];
 var output_index = 0;
 const midi_input_list = [];
 
 const slider_property = [
-    {text: "Expression", number: 11, init: 2, type: "general", max: 3},
+    {text: "Wave Pattern", number: 11, init: 2, type: "general", max: 3},
     {text: "Attack Time", number: 73, init: 0, type: "general", max: 15},
     {text: "Decay Time", number: 75, init: 0, type: "general", max: 7},
     {text: "Sustain Level", number: 7, init: 15, type: "general", max: 15},
@@ -51,6 +54,7 @@ function sliderInit() {
         slider.min = "0";
         slider.max = String(data.max);
         slider.defaultValue = String(data.init);
+        slider.name = data.text;
 
         slider_div.appendChild(slider);
 
@@ -68,6 +72,8 @@ function sliderInit() {
         }, false);
     }
 
+    store_preset(0, "Init");
+    updatePresetList();
     sendAllValue();
 }
 
@@ -75,7 +81,6 @@ function onSliderChange(number, value){
     const output_device = midi_output_list[output_index];
     output_device.send([0xB0, number, value]);
 }
-
 
 function sendAllValue(){
     const qs1 = document.querySelectorAll(".input-range");
@@ -89,16 +94,151 @@ function sendAllValue(){
 
 
 
+/* ==================================================================== */
+/* プリセット 関連 */
+/* ==================================================================== */
+function getAllData(){
+    const qs1 = document.querySelectorAll(".input-range");
+
+    const data_list = {};
+	qs1.forEach(function(a) {
+        data_list[a.name] = a.value
+    });
+    
+    return data_list
+}
+
+function setAllData(data_list){
+    const qs1 = document.querySelectorAll(".input-range");
+
+	qs1.forEach(function(a) {
+        a.value = data_list[a.name];
+    });
+
+    sendAllValue();
+}
 
 
+/* プリセット保存実処理 */
+function store_preset(id, name) {
+    const all_data = getAllData();
+    all_data["title"] = name;
+    const json_text = JSON.stringify(all_data);
+    session.setItem(id, json_text);
+    updatePresetList();
+}
+
+/* プリセット読み込み実処理 */
+function load_preset(id) {
+    const json_text = session.getItem(id);
+    const all_data = JSON.parse(json_text);
+
+    setAllData(all_data);
+}
+
+/* プリセット削除実処理 */
+function delete_preset(id) {
+    session.removeItem(id);
+    updatePresetList();
+}
+
+/* ストアボタン押下 */
+function onStore() {
+    const store_name_box = document.getElementById("store-name-box");
+    const name = store_name_box.value;
+
+    const store_id_box = document.getElementById("store-id-box");
+    const id = store_id_box.value;
+
+    store_preset(id, name);
+}
+
+function updatePresetList() {
+    const table = document.getElementById("preset-table");
+    table.innerHTML = "";
+
+    const header = getPresetTableHeader();
+    table.appendChild(header);
+
+    /* 保存されているID一覧を取得する */
+    const id_list = []
+    for (i = 0; i < session.length; i++){
+        const id = session.key(i);
+        id_list.push(id);
+    }
+
+    /* ID を辞書順にソート */
+    id_list.sort();
+
+    /* プリセット一覧を表示 */
+    for (i = 0; i < id_list.length; i++)
+    {
+        const id = id_list[i];
+        const json_text = session.getItem(id);
+        const all_data = JSON.parse(json_text);
+        const name = all_data["title"];
+        const tr = getPresetTableData(id, name);
+        table.appendChild(tr);
+    }
+}
+
+function getPresetTableHeader() {
+    const tr = document.createElement("tr");
+    const th0 = document.createElement("th");
+    const th1 = document.createElement("th");
+    const th2 = document.createElement("th");
+    const th3 = document.createElement("th");
+
+    tr.appendChild(th0);
+    tr.appendChild(th1);
+    tr.appendChild(th2);
+    tr.appendChild(th3);
+
+    th0.innerText = "ID";
+    th1.innerText = "Title";
+    th2.innerText = "Recall";
+    th3.innerText = "Delete";
+
+    th0.className = "preset-id"
+    th1.className = "preset-name"
+    th2.className = "preset-function"
+    th3.className = "preset-function"
+
+    return tr;
+}
+
+function getPresetTableData(id, name) {
+    const tr = document.createElement("tr");
+    const th0 = document.createElement("td");
+    const th1 = document.createElement("td");
+    const th2 = document.createElement("td");
+    const th3 = document.createElement("td");
+
+    tr.appendChild(th0);
+    tr.appendChild(th1);
+    tr.appendChild(th2);
+    tr.appendChild(th3);
+
+    th0.innerText = id;
+    th1.innerText = name;
+    th2.innerHTML = '<a class="border_slide_btn" href="#" onclick="load_preset(\'' + id +  '\')"> Recall </a>';
+    if (name !== "Init"){
+        th3.innerHTML = '<a class="border_slide_btn" href="#" onclick="delete_preset(\'' + id +  '\')"> Delete </a>';
+    }
+
+    th0.className = "preset-id"
+    th1.className = "preset-name"
+    th2.className = "preset-function"
+    th3.className = "preset-function"
+
+    return tr;
+}
 
 /* ==================================================================== */
 /* MIDI 関連 */
 /* ==================================================================== */
 /* midi 初期化 */
 function successCallback(midi) {
-    alert("MIDI ready!");	//MIDIが使える時に表示される。
-
     if (typeof midi.inputs === "function") {
         midi_input_list = midi.inputs();
         midi_output_list = midi.outputs();
