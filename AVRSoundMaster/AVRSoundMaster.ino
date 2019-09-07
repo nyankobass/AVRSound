@@ -66,6 +66,11 @@ namespace{
 
     void handleControlChange(byte channel , byte number , byte value )
     {
+        /* サスティーンレベル */
+        if (number == 7){
+            sound_control->onChangeSustain(value);
+        }
+
         /* エクスプレッション */
         if (number == 11){
             sound_control->onChangeExpression(value);
@@ -74,6 +79,16 @@ namespace{
         /* リリースタイム */
         else if (number == 72){
             sound_control->onChangeRelease(value); 
+        }
+
+        /* アタックタイム */
+        else if (number == 73){
+            sound_control->onChangeAttack(value); 
+        }
+
+        /* ディケイタイム */
+        else if (number == 75){
+            sound_control->onChangeDecay(value); 
         }
 
         /* ビブラートレイト */

@@ -15,13 +15,16 @@ public:
     virtual void Initialize() = 0;
     virtual void onKeyOn(uint8_t note_num) = 0;
     virtual void onKeyOff() = 0;
-    virtual void onChangeRelease(uint8_t value){};
     virtual void onChangeExpression(uint8_t value){};
     virtual void onChangeReverbSend(uint8_t value){};
     virtual void onChangeReverbTime(uint8_t value){};
     virtual void onChangeVibRate(uint8_t value){};
     virtual void onChangeVibDepth(uint8_t value){};
     virtual void onChangeVibDelay(uint8_t value){};
+    virtual void onChangeAttack(uint8_t value){};
+    virtual void onChangeDecay(uint8_t value){};
+    virtual void onChangeSustain(uint8_t value){};
+    virtual void onChangeRelease(uint8_t value){};
     virtual void onTimer() = 0;
 };
 

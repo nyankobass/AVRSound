@@ -7,6 +7,30 @@
 namespace AVRSound
 {
 
+/* Attack 設定用テーブル */
+static const struct AttackData {
+    uint8_t init_value;
+    uint16_t attack_time;
+    uint8_t attack_envelope;
+} ATTACK_DATA_TABLE[16] = {
+    { 0x0F,    0,  0 },
+    { 0x0E,   31,  1 },
+    { 0x0B,   63,  1 },
+    { 0x07,  125,  1 },
+    { 0x00,  250,  1 },
+    { 0x00,  500,  2 },
+    { 0x00,  750,  3 },
+    { 0x00, 1000,  4 },
+    { 0x00, 1250,  5 },
+    { 0x00, 1500,  6 },
+    { 0x00, 1750,  7 },
+    { 0x00, 1750,  7 },
+    { 0x00, 1750,  7 },
+    { 0x00, 1750,  7 },
+    { 0x00, 1750,  7 },
+};
+
+
 SquareSoundControl::SquareSoundControl()
 {
 
@@ -46,9 +70,9 @@ void SquareSoundControl::onKeyOn(uint8_t note_num)
 
     setting.set_frequency(freqency);
     setting.set_is_start(true);
-    setting.set_init_volume(0x0F);
+    setting.set_init_volume(ATTACK_DATA_TABLE[attack].init_value);
     setting.set_is_envelope_increment(true);
-    setting.set_envelope_step_time(0);
+    setting.set_envelope_step_time(ATTACK_DATA_TABLE[attack].attack_envelope);
     setting.set_is_enable_length(false);
     setting.set_length(0);
 
@@ -58,6 +82,8 @@ void SquareSoundControl::onKeyOn(uint8_t note_num)
     is_reset_vib = true;
     is_key_on = true;
     key_on_tick = 0;
+
+    adsr_mode = ATTACK_MODE;
 }
 
 void SquareSoundControl::onKeyOff() 
@@ -68,23 +94,26 @@ void SquareSoundControl::onKeyOff()
     setting.set_frequency(freqency);
     
     /* リバーブ処理 */ 
-    if (reverb_send != 0){
+    if (reverb_send != 0 && reverb_time != 0){
         setting.set_is_start(true);
-        setting.set_init_volume(reverb_send);
+        setting.set_init_volume(reverb_send < sustain ? reverb_send : sustain);
         setting.set_envelope_step_time(reverb_time);
+        adsr_mode = REVERB_MODE;
     }
 
     /* リバーブがかかっていなければリリースの処理 */
     else {
         setting.set_is_start(false);
     
-        if (release_time == 0){
+        if (release == 0){
             setting.set_init_volume(0x00);
             setting.set_envelope_step_time(0);
+            adsr_mode = KEY_OFF;
         }
         else{
             setting.set_init_volume(0xFF);
-            setting.set_envelope_step_time(release_time);
+            setting.set_envelope_step_time(release);
+            adsr_mode = RELEASE_MODE;
         }
     }
 
@@ -93,7 +122,24 @@ void SquareSoundControl::onKeyOff()
 
 void SquareSoundControl::onChangeRelease(uint8_t value)
 {
-    release_time = value >> 3;
+    release = value >> 4;
+}
+
+void SquareSoundControl::onChangeAttack(uint8_t value)
+{
+    attack = value >> 3;
+}
+
+void SquareSoundControl::onChangeSustain(uint8_t value)
+{
+    sustain = value >> 3;
+    decay.time = (uint16_t)(decay.envelope * (0x0F - sustain)) << 4;
+}
+
+void SquareSoundControl::onChangeDecay(uint8_t value)
+{
+    decay.envelope = value >> 4;
+    decay.time = ((uint16_t)(decay.envelope * (0x0F - sustain))) << 4;
 }
 
 void SquareSoundControl::onChangeExpression(uint8_t value)
@@ -129,22 +175,53 @@ void SquareSoundControl::onChangeVibDelay(uint8_t value)
 
 void SquareSoundControl::onTimer()
 {
-    key_on_tick++;
+    /* KeyOn 時間の計測 */
+    key_on_tick = key_on_tick == 0xFFFF ? 0xFFFF : key_on_tick + 1;
 
     /* ビブラート処理 */
-    if (is_key_on)
+    if (is_key_on){
         onVibTimer();
+    }
 
-    if (key_on_tick == 20 && is_key_on){
+    if (adsr_mode == ATTACK_MODE ){
+        if (key_on_tick < ATTACK_DATA_TABLE[attack].attack_time) {
+            return;
+        }
+
+        if (decay.time == 0) {
+            adsr_mode = DECAY_MODE;
+            return;
+        }
+
+        /* Decay 動作を指示 */
         setting.set_frequency(freqency);
         setting.set_is_start(true);
-        setting.set_init_volume(0x0b);
-        setting.set_is_envelope_increment(true);
-        setting.set_envelope_step_time(0);
-        setting.set_is_enable_length(false);
-        setting.set_length(0);
-
+        setting.set_init_volume(0x0F);
+        setting.set_is_envelope_increment(false);
+        setting.set_envelope_step_time(decay.envelope);
         UpdateSound();
+
+        adsr_mode = DECAY_MODE;
+
+        return;
+    }
+
+    if (adsr_mode == DECAY_MODE) {
+        if ( key_on_tick < ATTACK_DATA_TABLE[attack].attack_time + decay.time){
+            return;
+        }
+
+        /* Sustain 動作を指示 */
+        setting.set_frequency(freqency);
+        setting.set_is_start(true);
+        setting.set_init_volume(sustain);
+        setting.set_is_envelope_increment(false);
+        setting.set_envelope_step_time(0);
+        UpdateSound();
+
+        adsr_mode = SUSTAIN_MODE;
+
+        return;
     }
 }
 
@@ -202,8 +279,6 @@ void SquareSoundControl::onVibTimer()
 
     setting.set_is_start(false);
     UpdateSound();
-
-    DbgPin3Latch();
 
     tick = (tick + 1) & 0x03;
 }
