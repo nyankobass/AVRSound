@@ -75,6 +75,7 @@ function sliderInit() {
     store_preset(0, "Init");
     updatePresetList();
     sendAllValue();
+    document.onkeyup = onKeyUp;
 }
 
 function onSliderChange(number, value){
@@ -152,6 +153,26 @@ function onStore() {
 
     store_preset(id, name);
 }
+
+/* 各種キー押下 */
+/* 該当するIDのプリセットが存在すればリコールする */
+function onKeyUp() {
+    var value = document.activeElement;
+
+    if (value.tagName !== "BODY"){
+        return;
+    }
+
+    const json_text = session.getItem(String.fromCharCode(event.keyCode));
+
+    if (json_text == null){
+        return;
+    }
+
+    const all_data = JSON.parse(json_text);
+
+    setAllData(all_data);
+} 
 
 function updatePresetList() {
     const table = document.getElementById("preset-table");
